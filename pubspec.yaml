@@ -1,0 +1,55 @@
+name: chat_app
+description: "WhatsApp-style Real-Time Chat Application"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: ^3.13.0
+  firebase_auth: ^5.5.3
+  cloud_firestore: ^5.6.7
+
+  # Cloudinary / HTTP
+  dio: ^5.8.0
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+
+  # UI
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  google_fonts: ^6.2.1
+  photo_view: ^0.15.0
+
+  # Media
+  image_picker: ^1.1.2
+  record: 5.1.0
+  audioplayers: ^6.1.0
+
+  # Utils
+  intl: ^0.20.2
+  uuid: ^4.5.1
+  path_provider: ^2.1.5
+  permission_handler: ^11.3.1
+  connectivity_plus: ^6.1.3
+  path: ^1.9.1
+  image_cropper: ^12.1.1
+  emoji_picker_flutter: ^4.4.0
+  flutter_cache_manager: ^3.4.1
+
+dependency_overrides:
+  record_platform_interface: 1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
