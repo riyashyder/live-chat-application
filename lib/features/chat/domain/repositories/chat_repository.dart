@@ -14,6 +14,7 @@ abstract class ChatRepository {
     required String chatId,
     required String receiverId,
     required String text,
+    String? messageId,
   });
 
   /// Send an image message
@@ -21,6 +22,7 @@ abstract class ChatRepository {
     required String chatId,
     required String receiverId,
     required File imageFile,
+    String? messageId,
   });
 
   /// Send an audio message
@@ -29,6 +31,7 @@ abstract class ChatRepository {
     required String receiverId,
     required File audioFile,
     required int durationInSeconds,
+    String? messageId,
   });
 
   /// Create or get existing chat between two users

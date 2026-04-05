@@ -107,6 +107,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       chatId: widget.chatId,
       otherUserId: widget.otherUser.uid,
     )));
+    final chatActionsState = ref.watch(chatActionsProvider);
+    final pendingMessages = chatActionsState.pendingMessages[widget.chatId] ?? [];
     final displayUser = otherUserStream.valueOrNull ?? widget.otherUser;
 
     return Scaffold(
@@ -194,7 +196,25 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                   key: const ValueKey('messages_error'),
                   child: Text('Error: $e'),
                 ),
-                data: (messages) {
+                data: (firestoreMessages) {
+                  // Separate by ID, prioritizing firestore messages
+                  final Map<String, MessageEntity> messageMap = {};
+                  
+                  // Add firestore messages first (they are the source of truth)
+                  for (final msg in firestoreMessages) {
+                    messageMap[msg.id] = msg;
+                  }
+                  
+                  // Add pending messages only if they aren't already in the list
+                  for (final pending in pendingMessages) {
+                    if (!messageMap.containsKey(pending.id)) {
+                      messageMap[pending.id] = pending;
+                    }
+                  }
+
+                  final messages = messageMap.values.toList()
+                    ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
                   // Mark new messages as read
                   if (messages.isNotEmpty) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -387,7 +407,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
             FullImageScreen(
-          imageUrl: message.imageUrl!,
+          imageUrl: message.imageUrl ?? '',
+          localFilePath: message.localFilePath,
           heroTag: 'image_${message.id}',
         ),
         transitionsBuilder: (context, anim, secondaryAnim, child) {

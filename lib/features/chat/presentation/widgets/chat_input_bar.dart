@@ -459,9 +459,7 @@ class _ChatInputBarState extends State<ChatInputBar>
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkCard : AppColors.lightSurface,
             shape: BoxShape.circle,
-            border: !isDark 
-              ? Border.all(color: AppColors.lightBorder, width: 0.5)
-              : null,
+            border: null,
             boxShadow: isDark ? [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.05),
@@ -488,9 +486,7 @@ class _ChatInputBarState extends State<ChatInputBar>
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkCard : AppColors.lightSurface,
               borderRadius: BorderRadius.circular(28),
-              border: !isDark 
-                ? Border.all(color: AppColors.lightBorder, width: 0.5)
-                : null,
+              border: null,
               boxShadow: isDark ? [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -535,6 +531,7 @@ class _ChatInputBarState extends State<ChatInputBar>
                       },
                       decoration: InputDecoration(
                         hintText: 'Type a message...',
+                        filled: false,
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -577,9 +574,7 @@ class _ChatInputBarState extends State<ChatInputBar>
                   ? (isDark ? AppColors.darkCard : AppColors.lightSurface)
                   : null,
               shape: BoxShape.circle,
-              border: !_hasText && !isDark
-                  ? Border.all(color: AppColors.lightBorder, width: 0.5)
-                  : null,
+              border: null,
               boxShadow: [
                 BoxShadow(
                   color: _hasText 

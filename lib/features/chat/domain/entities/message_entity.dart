@@ -19,6 +19,7 @@ class MessageEntity {
   final DateTime? readAt;
   final bool isDeleted;
   final List<String> deletedFor;
+  final String? localFilePath; // For optimistic UI updates
 
   const MessageEntity({
     required this.id,
@@ -35,6 +36,7 @@ class MessageEntity {
     this.status = MessageStatus.sent,
     this.isDeleted = false,
     this.deletedFor = const [],
+    this.localFilePath,
   });
 
   Map<String, dynamic> toMap() {
@@ -53,6 +55,7 @@ class MessageEntity {
       'status': status.name,
       'isDeleted': isDeleted,
       'deletedFor': deletedFor,
+      // localFilePath is not stored in Firestore
     };
   }
 
@@ -86,6 +89,7 @@ class MessageEntity {
           : MessageStatus.sent,
       isDeleted: map['isDeleted'] ?? false,
       deletedFor: List<String>.from(map['deletedFor'] ?? []),
+      localFilePath: null, // Always null when loading from Firestore
     );
   }
 
@@ -95,6 +99,7 @@ class MessageEntity {
     List<String>? deletedFor,
     DateTime? deliveredAt,
     DateTime? readAt,
+    String? localFilePath,
   }) {
     return MessageEntity(
       id: id,
@@ -111,6 +116,7 @@ class MessageEntity {
       status: status ?? this.status,
       isDeleted: isDeleted ?? this.isDeleted,
       deletedFor: deletedFor ?? this.deletedFor,
+      localFilePath: localFilePath ?? this.localFilePath,
     );
   }
 }

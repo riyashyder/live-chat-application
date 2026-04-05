@@ -99,10 +99,11 @@ class ChatRepositoryImpl implements ChatRepository {
     required String chatId,
     required String receiverId,
     required String text,
+    String? messageId,
   }) async {
-    final messageId = _uuid.v4();
+    final finalMessageId = messageId ?? _uuid.v4();
     final message = MessageEntity(
-      id: messageId,
+      id: finalMessageId,
       senderId: _currentUid,
       receiverId: receiverId,
       text: text,
@@ -140,8 +141,9 @@ class ChatRepositoryImpl implements ChatRepository {
     required String chatId,
     required String receiverId,
     required File imageFile,
+    String? messageId,
   }) async {
-    final messageId = _uuid.v4();
+    final finalMessageId = messageId ?? _uuid.v4();
 
     try {
       // Upload image to Cloudinary
@@ -152,7 +154,7 @@ class ChatRepositoryImpl implements ChatRepository {
       if (imageUrl == null) throw Exception('Image upload failed');
 
       final message = MessageEntity(
-        id: messageId,
+        id: finalMessageId,
         senderId: _currentUid,
         receiverId: receiverId,
         imageUrl: imageUrl,
@@ -166,7 +168,7 @@ class ChatRepositoryImpl implements ChatRepository {
         _chatsRef
             .doc(chatId)
             .collection(FirestoreConstants.messagesCollection)
-            .doc(messageId),
+            .doc(finalMessageId),
         message.toMap(),
       );
       batch.update(_chatsRef.doc(chatId), {
@@ -188,8 +190,9 @@ class ChatRepositoryImpl implements ChatRepository {
     required String receiverId,
     required File audioFile,
     required int durationInSeconds,
+    String? messageId,
   }) async {
-    final messageId = _uuid.v4();
+    final finalMessageId = messageId ?? _uuid.v4();
 
     try {
       // Upload audio to Cloudinary
@@ -200,7 +203,7 @@ class ChatRepositoryImpl implements ChatRepository {
       if (audioUrl == null) throw Exception('Audio upload failed');
 
       final message = MessageEntity(
-        id: messageId,
+        id: finalMessageId,
         senderId: _currentUid,
         receiverId: receiverId,
         audioUrl: audioUrl,
@@ -215,7 +218,7 @@ class ChatRepositoryImpl implements ChatRepository {
         _chatsRef
             .doc(chatId)
             .collection(FirestoreConstants.messagesCollection)
-            .doc(messageId),
+            .doc(finalMessageId),
         message.toMap(),
       );
       batch.update(_chatsRef.doc(chatId), {

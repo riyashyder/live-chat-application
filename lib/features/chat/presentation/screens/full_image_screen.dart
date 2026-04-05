@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -5,11 +6,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 class FullImageScreen extends StatelessWidget {
   final String imageUrl;
   final String heroTag;
+  final String? localFilePath;
 
   const FullImageScreen({
     super.key,
     required this.imageUrl,
     required this.heroTag,
+    this.localFilePath,
   });
 
   @override
@@ -27,9 +30,11 @@ class FullImageScreen extends StatelessWidget {
       body: Center(
         child: Hero(
           tag: heroTag,
-          child: hasImage
+          child: hasImage || localFilePath != null
               ? PhotoView(
-                  imageProvider: CachedNetworkImageProvider(imageUrl),
+                  imageProvider: localFilePath != null 
+                    ? FileImage(File(localFilePath!)) as ImageProvider
+                    : CachedNetworkImageProvider(imageUrl),
                   minScale: PhotoViewComputedScale.contained,
                   maxScale: PhotoViewComputedScale.covered * 3,
                   backgroundDecoration: const BoxDecoration(color: Colors.black),

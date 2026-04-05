@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -196,41 +197,81 @@ class MessageBubble extends StatelessWidget {
                 Hero(
                   tag: 'image_${message.id}',
                   child: ImageFiltered(
+                    // Blur if it's a network image and not yet "viewed"? 
+                    // Or always blur for privacy until tap? 
+                    // Let's keep existing blur logic but apply it to local too for consistency.
                     imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: message.imageUrl != null
-                        ? Image.network(
-                            message.imageUrl!,
+                    child: message.localFilePath != null
+                        ? Image.file(
+                            File(message.localFilePath!),
                             width: 220,
                             height: 220,
                             fit: BoxFit.cover,
                           )
-                        : Container(
-                            width: 220,
-                            height: 220,
-                            color: Colors.grey.withValues(alpha: 0.2),
-                          ),
+                        : message.imageUrl != null
+                            ? Image.network(
+                                message.imageUrl!,
+                                width: 220,
+                                height: 220,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Container(
+                                  width: 220,
+                                  height: 220,
+                                  color: Colors.grey.withValues(alpha: 0.2),
+                                  child: const Icon(Icons.error_outline),
+                                ),
+                              )
+                            : Container(
+                                width: 220,
+                                height: 220,
+                                color: Colors.grey.withValues(alpha: 0.2),
+                              ),
                   ),
                 ),
+                // Overlay for uploading or viewing
                 Container(
                   width: 220,
                   height: 220,
                   color: Colors.black.withValues(alpha: 0.2),
-                  child: const Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.visibility_off_outlined, color: Colors.white, size: 32),
-                        SizedBox(height: 8),
-                        Text(
-                          'Tap to View',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                  child: Center(
+                    child: message.localFilePath != null
+                        ? const Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Sending...',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          )
+                        : const Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.visibility_off_outlined, color: Colors.white, size: 32),
+                              SizedBox(height: 8),
+                              Text(
+                                'Tap to View',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ],

@@ -8,6 +8,7 @@ import 'package:chat_app/features/chat/data/repositories/chat_repository_impl.da
 import 'package:chat_app/features/chat/domain/entities/message_entity.dart';
 import 'package:chat_app/features/chat/domain/entities/chat_entity.dart';
 import 'package:chat_app/features/chat/domain/repositories/chat_repository.dart';
+import 'package:uuid/uuid.dart';
 
 // Chat Repository Provider
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
@@ -47,6 +48,7 @@ final chatActionsProvider =
     StateNotifierProvider<ChatActionsNotifier, ChatActionState>((ref) {
   return ChatActionsNotifier(
     ref.watch(chatRepositoryProvider),
+    ref,
   );
 });
 
@@ -58,27 +60,37 @@ class ChatActionState {
   final bool isSending;
   final bool isRecording;
   final String? error;
+  final Map<String, List<MessageEntity>> pendingMessages; // chatId -> list of messages
 
   const ChatActionState({
     this.isSending = false,
     this.isRecording = false,
     this.error,
+    this.pendingMessages = const {},
   });
 
-  ChatActionState copyWith({bool? isSending, bool? isRecording, String? error}) {
+  ChatActionState copyWith({
+    bool? isSending,
+    bool? isRecording,
+    String? error,
+    Map<String, List<MessageEntity>>? pendingMessages,
+  }) {
     return ChatActionState(
       isSending: isSending ?? this.isSending,
       isRecording: isRecording ?? this.isRecording,
       error: error,
+      pendingMessages: pendingMessages ?? this.pendingMessages,
     );
   }
 }
 
 class ChatActionsNotifier extends StateNotifier<ChatActionState> {
   final ChatRepository _repository;
+  final Ref _ref;
+  final _uuid = const Uuid();
   Timer? _typingTimer;
 
-  ChatActionsNotifier(this._repository)
+  ChatActionsNotifier(this._repository, this._ref)
       : super(const ChatActionState());
 
   Future<String> getOrCreateChat(String otherUserId) async {
@@ -109,16 +121,51 @@ class ChatActionsNotifier extends StateNotifier<ChatActionState> {
     required String receiverId,
     required File imageFile,
   }) async {
-    state = state.copyWith(isSending: true);
+    final currentUserId = _ref.read(currentUserIdProvider);
+    if (currentUserId == null) return;
+
+    final tempMessage = MessageEntity(
+      id: 'temp_${_uuid.v4()}',
+      senderId: currentUserId,
+      receiverId: receiverId,
+      type: MessageType.image,
+      timestamp: DateTime.now(),
+      status: MessageStatus.sent,
+      localFilePath: imageFile.path,
+    );
+
+    // Add to pending
+    final currentPending = Map<String, List<MessageEntity>>.from(state.pendingMessages);
+    final chatPending = List<MessageEntity>.from(currentPending[chatId] ?? []);
+    chatPending.add(tempMessage);
+    currentPending[chatId] = chatPending;
+    
+    state = state.copyWith(pendingMessages: currentPending);
+
     try {
       await _repository.sendImageMessage(
         chatId: chatId,
         receiverId: receiverId,
         imageFile: imageFile,
+        messageId: tempMessage.id,
       );
-      state = state.copyWith(isSending: false);
+      
+      // Wait a bit to ensure Firestore syncs before removing from pending
+      await Future.delayed(const Duration(seconds: 2));
+      
+      // Remove from pending
+      final updatedPending = Map<String, List<MessageEntity>>.from(state.pendingMessages);
+      final updatedChatPending = List<MessageEntity>.from(updatedPending[chatId] ?? []);
+      updatedChatPending.removeWhere((m) => m.id == tempMessage.id);
+      updatedPending[chatId] = updatedChatPending;
+      state = state.copyWith(pendingMessages: updatedPending);
     } catch (e) {
-      state = state.copyWith(isSending: false, error: e.toString());
+      // Remove from pending on error
+      final updatedPending = Map<String, List<MessageEntity>>.from(state.pendingMessages);
+      final updatedChatPending = List<MessageEntity>.from(updatedPending[chatId] ?? []);
+      updatedChatPending.removeWhere((m) => m.id == tempMessage.id);
+      updatedPending[chatId] = updatedChatPending;
+      state = state.copyWith(pendingMessages: updatedPending, error: e.toString());
     }
   }
 
@@ -128,17 +175,51 @@ class ChatActionsNotifier extends StateNotifier<ChatActionState> {
     required File audioFile,
     required int durationInSeconds,
   }) async {
-    state = state.copyWith(isSending: true);
+    final currentUserId = _ref.read(currentUserIdProvider);
+    if (currentUserId == null) return;
+
+    final tempMessage = MessageEntity(
+      id: 'temp_${_uuid.v4()}',
+      senderId: currentUserId,
+      receiverId: receiverId,
+      type: MessageType.audio,
+      timestamp: DateTime.now(),
+      status: MessageStatus.sent,
+      audioDuration: durationInSeconds,
+      // localFilePath could be added for audio too if needed, but the user specifically asked for images
+    );
+
+    // Add to pending
+    final currentPending = Map<String, List<MessageEntity>>.from(state.pendingMessages);
+    final chatPending = List<MessageEntity>.from(currentPending[chatId] ?? []);
+    chatPending.add(tempMessage);
+    currentPending[chatId] = chatPending;
+    
+    state = state.copyWith(pendingMessages: currentPending);
+
     try {
       await _repository.sendAudioMessage(
         chatId: chatId,
         receiverId: receiverId,
         audioFile: audioFile,
         durationInSeconds: durationInSeconds,
+        messageId: tempMessage.id,
       );
-      state = state.copyWith(isSending: false);
+      
+      // Safety delay
+      await Future.delayed(const Duration(seconds: 2));
+
+      final updatedPending = Map<String, List<MessageEntity>>.from(state.pendingMessages);
+      final updatedChatPending = List<MessageEntity>.from(updatedPending[chatId] ?? []);
+      updatedChatPending.removeWhere((m) => m.id == tempMessage.id);
+      updatedPending[chatId] = updatedChatPending;
+      state = state.copyWith(pendingMessages: updatedPending);
     } catch (e) {
-      state = state.copyWith(isSending: false, error: e.toString());
+      final updatedPending = Map<String, List<MessageEntity>>.from(state.pendingMessages);
+      final updatedChatPending = List<MessageEntity>.from(updatedPending[chatId] ?? []);
+      updatedChatPending.removeWhere((m) => m.id == tempMessage.id);
+      updatedPending[chatId] = updatedChatPending;
+      state = state.copyWith(pendingMessages: updatedPending, error: e.toString());
     }
   }
 
