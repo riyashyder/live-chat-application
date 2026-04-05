@@ -98,7 +98,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
     final authState = ref.watch(authNotifierProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          ref.read(authNotifierProvider.notifier).clearError();
+        }
+      },
+      child: Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -324,7 +330,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           GestureDetector(
-                            onTap: () => Navigator.pop(context),
+                            onTap: () {
+                              _nameController.clear();
+                              _emailController.clear();
+                              _passwordController.clear();
+                              _confirmPasswordController.clear();
+                              _formKey.currentState?.reset();
+                              ref.read(authNotifierProvider.notifier).clearError();
+                              
+                              Navigator.pop(context);
+                            },
                             child: const Text(
                               'Sign In',
                               style: TextStyle(
@@ -344,6 +359,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

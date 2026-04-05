@@ -345,8 +345,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                 title: const Text('Save to Gallery'),
                 onTap: () async {
                   Navigator.pop(context);
-                  final success = await MediaSaver.saveImage(message.imageUrl, message.localFilePath);
-                  if (mounted) {
+                  final success = await MediaSaver.saveImage(message.imageUrl ?? '', message.localFilePath);
+                  if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(success ? 'Image saved to gallery!' : 'Failed to save image.'),

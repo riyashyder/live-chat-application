@@ -6,25 +6,38 @@ import 'package:path_provider/path_provider.dart';
 class MediaSaver {
   static Future<bool> saveImage(String? imageUrl, String? localPath) async {
     try {
-      print('MediaSaver: Starting save process. URL: $imageUrl, Local: $localPath');
-      
+      print(
+          'MediaSaver: Starting save process. URL: $imageUrl, Local: $localPath');
+
       String? pathToSave;
+
+      // Explicitly check for gallery permissions
+      bool hasAccess = await Gal.hasAccess();
+      if (!hasAccess) {
+        print('MediaSaver: Requesting gallery access...');
+        hasAccess = await Gal.requestAccess();
+      }
+
+      if (!hasAccess) {
+        print('MediaSaver: Permission denied by user.');
+        return false;
+      }
 
       if (localPath != null && await File(localPath).exists()) {
         print('MediaSaver: Using existing local file: $localPath');
         pathToSave = localPath;
       } else if (imageUrl != null && imageUrl.isNotEmpty) {
         // Ensure HTTPS
-        final downloadUrl = imageUrl.startsWith('http://') 
-            ? imageUrl.replaceFirst('http://', 'https://') 
+        final downloadUrl = imageUrl.startsWith('http://')
+            ? imageUrl.replaceFirst('http://', 'https://')
             : imageUrl;
-            
+
         print('MediaSaver: Downloading from URL: $downloadUrl');
-        
+
         final tempDir = await getTemporaryDirectory();
         final fileName = 'img_${DateTime.now().millisecondsSinceEpoch}.jpg';
         pathToSave = '${tempDir.path}/$fileName';
-        
+
         await Dio().download(downloadUrl, pathToSave);
         print('MediaSaver: Download complete: $pathToSave');
       }
