@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chat_app/core/theme/app_colors.dart';
 import 'package:chat_app/core/widgets/avatar_widget.dart';
@@ -12,6 +13,7 @@ import 'package:chat_app/features/chat/domain/entities/message_entity.dart';
 import 'package:chat_app/features/chat/presentation/screens/chat_detail_screen.dart';
 import 'package:chat_app/features/chat/presentation/screens/user_search_screen.dart';
 import 'package:chat_app/features/chat/presentation/screens/full_image_screen.dart';
+import 'package:chat_app/core/widgets/shimmer_loading.dart';
 
 class ChatListScreen extends ConsumerWidget {
   const ChatListScreen({super.key});
@@ -47,68 +49,82 @@ class ChatListScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: chatsAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-              const SizedBox(height: 12),
-              Text('Error loading chats', style: Theme.of(context).textTheme.bodyLarge),
-              const SizedBox(height: 4),
-              Text(e.toString(), style: Theme.of(context).textTheme.bodyMedium),
-            ],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 500),
+        child: chatsAsync.when(
+          loading: () => const ChatListShimmer(key: ValueKey('shimmer')),
+          error: (e, _) => Center(
+            key: const ValueKey('error'),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline,
+                    size: 48, color: AppColors.error),
+                const SizedBox(height: 12),
+                Text('Error loading chats',
+                    style: Theme.of(context).textTheme.bodyLarge),
+                const SizedBox(height: 4),
+                Text(e.toString(),
+                    style: Theme.of(context).textTheme.bodyMedium),
+              ],
+            ),
           ),
-        ),
-        data: (chats) {
-          if (chats.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.chat_bubble_outline_rounded,
-                      size: 40,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No conversations yet',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Start a new chat to connect',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            );
-          }
+          data: (chats) {
+            // Avoid flickering "No conversations" if we are still refreshing
+            // but have an empty list (likely initial cache miss or transition)
+            if (chats.isEmpty &&
+                (chatsAsync.isRefreshing || chatsAsync.isLoading)) {
+              return const ChatListShimmer(key: ValueKey('shimmer_refreshing'));
+            }
 
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: chats.length,
-            itemBuilder: (context, index) {
-              final chat = chats[index];
-              return _ChatTile(
-                chat: chat,
-                currentUserId: currentUserId ?? '',
-              );
-            },
-          );
-        },
+            if (chats.isEmpty) {
+              return Center(
+                key: const ValueKey('empty'),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        size: 40,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No conversations yet',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Start a new chat to connect',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn();
+            }
+
+            return ListView.builder(
+              key: const ValueKey('list'),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: chats.length,
+              itemBuilder: (context, index) {
+                final chat = chats[index];
+                return _ChatTile(
+                  chat: chat,
+                  currentUserId: currentUserId ?? '',
+                );
+              },
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.push(
@@ -144,7 +160,6 @@ class _ChatTile extends ConsumerWidget {
       data: (user) {
         if (user == null) return const SizedBox.shrink();
 
-
         if (unreadCount > 0) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             ref.read(chatActionsProvider.notifier).markAsDelivered(chat.chatId);
@@ -165,7 +180,8 @@ class _ChatTile extends ConsumerWidget {
               context: context,
               builder: (ctx) => AlertDialog(
                 title: const Text('Delete Chat'),
-                content: const Text('Are you sure you want to delete this chat?'),
+                content:
+                    const Text('Are you sure you want to delete this chat?'),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, false),
@@ -257,7 +273,10 @@ class _ChatTile extends ConsumerWidget {
                               ),
                             Expanded(
                               child: Text(
-                                _getLastMessagePreview(chat, lastMessageAsync.valueOrNull, lastMessageAsync.hasValue),
+                                _getLastMessagePreview(
+                                    chat,
+                                    lastMessageAsync.valueOrNull,
+                                    lastMessageAsync.hasValue),
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: isDark
@@ -305,7 +324,8 @@ class _ChatTile extends ConsumerWidget {
     );
   }
 
-  String _getLastMessagePreview(ChatEntity chat, MessageEntity? msg, bool isLoaded) {
+  String _getLastMessagePreview(
+      ChatEntity chat, MessageEntity? msg, bool isLoaded) {
     // If we have successfully loaded the specific last message for this user, follow it
     if (isLoaded) {
       if (msg == null) return 'Start a conversation';
@@ -317,7 +337,7 @@ class _ChatTile extends ConsumerWidget {
 
     // Fallback while loading or if stream is unavailable
     if (chat.lastMessage.isEmpty) return 'Start a conversation';
-    
+
     // Check if the chat was cleared after the last message was sent
     final clearedAt = chat.clearedAt['clearedAt_$currentUserId'];
     if (clearedAt != null && chat.lastMessageTime != null) {
@@ -333,7 +353,8 @@ class _ChatTile extends ConsumerWidget {
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => ChatDetailScreen(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            ChatDetailScreen(
           otherUser: user,
           chatId: chat.chatId,
         ),

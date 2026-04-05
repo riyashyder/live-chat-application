@@ -11,9 +11,9 @@ import 'package:chat_app/features/chat/domain/entities/message_entity.dart';
 import 'package:chat_app/features/chat/presentation/widgets/message_bubble.dart';
 import 'package:chat_app/features/chat/presentation/widgets/typing_indicator.dart';
 import 'package:chat_app/features/chat/presentation/widgets/chat_input_bar.dart';
-import 'package:chat_app/features/chat/presentation/widgets/audio_player_widget.dart';
 import 'package:chat_app/features/chat/presentation/screens/full_image_screen.dart';
 import 'package:chat_app/features/chat/presentation/screens/message_info_screen.dart';
+import 'package:chat_app/core/widgets/shimmer_loading.dart';
 
 class ChatDetailScreen extends ConsumerStatefulWidget {
   final UserEntity otherUser;
@@ -182,29 +182,45 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         children: [
           // Messages list
           Expanded(
-            child: messagesAsync.when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              ),
-              error: (e, _) => Center(child: Text('Error: $e')),
-              data: (messages) {
-                // Mark new messages as read
-                if (messages.isNotEmpty) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (!mounted) return;
-                    ref
-                        .read(chatActionsProvider.notifier)
-                        .markAsRead(widget.chatId);
-                  });
-                }
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 500),
+              child: messagesAsync.when(
+                loading: () => const ShimmerLoading(
+                  key: ValueKey('messages_loading'),
+                  isLoading: true,
+                  child: MessageShimmer(),
+                ),
+                error: (e, _) => Center(
+                  key: const ValueKey('messages_error'),
+                  child: Text('Error: $e'),
+                ),
+                data: (messages) {
+                  // Mark new messages as read
+                  if (messages.isNotEmpty) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted) return;
+                      ref
+                          .read(chatActionsProvider.notifier)
+                          .markAsRead(widget.chatId);
+                    });
+                  }
 
-                return ListView.builder(
-                  controller: _scrollController,
-                  reverse: true,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: messages.length +
-                      (typingAsync.valueOrNull == true ? 1 : 0),
-                  itemBuilder: (context, index) {
+                  if (messages.isEmpty && (messagesAsync.isRefreshing || messagesAsync.isLoading)) {
+                    return const ShimmerLoading(
+                      key: ValueKey('messages_refreshing'),
+                      isLoading: true,
+                      child: MessageShimmer(),
+                    );
+                  }
+
+                  return ListView.builder(
+                    key: const ValueKey('messages_list'),
+                    controller: _scrollController,
+                    reverse: true,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: messages.length +
+                        (typingAsync.valueOrNull == true ? 1 : 0),
+                    itemBuilder: (context, index) {
                     // Show typing indicator at the top (index 0 when reversed)
                     if (typingAsync.valueOrNull == true && index == 0) {
                       return const TypingIndicator();
@@ -231,13 +247,6 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         onImageTap: message.type == MessageType.image
                             ? () => _openFullImage(message)
                             : null,
-                        audioPlayer: message.type == MessageType.audio
-                            ? AudioPlayerWidget(
-                                audioUrl: message.audioUrl ?? '',
-                                durationInSeconds: message.audioDuration,
-                                isMe: isMe,
-                              )
-                            : null,
                       ),
                     );
                   },
@@ -245,6 +254,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               },
             ),
           ),
+        ),
           // Input bar
           ChatInputBar(
             onSendText: (text) {

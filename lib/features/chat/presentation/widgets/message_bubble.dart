@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:chat_app/core/theme/app_colors.dart';
 import 'package:chat_app/core/utils/date_formatter.dart';
 import 'package:chat_app/features/chat/domain/entities/message_entity.dart';
@@ -59,34 +60,56 @@ class MessageBubble extends StatelessWidget {
                       horizontal: message.type == MessageType.image && !message.isDeleted ? 4 : 14,
                       vertical: message.type == MessageType.image && !message.isDeleted ? 4 : 10,
                     ),
-                    decoration: BoxDecoration(
-                      color: bubbleColor,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(20),
-                        topRight: const Radius.circular(20),
-                        bottomLeft: Radius.circular(isMe ? 20 : 0),
-                        bottomRight: Radius.circular(isMe ? 0 : 20),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                      decoration: BoxDecoration(
+                        color: bubbleColor,
+                        borderRadius: BorderRadius.only(
+                          topLeft: const Radius.circular(20),
+                          topRight: const Radius.circular(20),
+                          bottomLeft: Radius.circular(isMe ? 20 : 0),
+                          bottomRight: Radius.circular(isMe ? 0 : 20),
                         ),
-                      ],
-                      gradient: isMe && !message.isDeleted
-                          ? LinearGradient(
-                              colors: [
-                                bubbleColor,
-                                bubbleColor.withValues(alpha: 0.8),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            )
-                          : null,
-                    ),
+                        border: !isMe && isDark
+                            ? Border.all(
+                                color: Colors.white.withValues(alpha: 0.05),
+                                width: 0.5,
+                              )
+                            : null,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                        gradient: !message.isDeleted
+                            ? isMe
+                                ? LinearGradient(
+                                    colors: [
+                                      bubbleColor,
+                                      bubbleColor.withValues(alpha: 0.8),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : isDark
+                                    ? LinearGradient(
+                                        colors: [
+                                          bubbleColor,
+                                          bubbleColor.withValues(alpha: 0.9),
+                                        ],
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                      )
+                                    : null
+                            : null,
+                      ),
                     child: _buildContent(context, textColor, timeColor),
-                  ),
+                  ).animate().fadeIn(duration: 300.ms, curve: Curves.easeOut).slideX(
+                        begin: isMe ? 0.2 : -0.2,
+                        end: 0,
+                        duration: 400.ms,
+                        curve: Curves.easeOutCubic,
+                      ),
                 ),
               ),
             ],

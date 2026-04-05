@@ -36,7 +36,7 @@ class AppColors {
   static const senderBubbleLight = Color(0xFF6C63FF);
   static const receiverBubbleLight = Color(0xFFF1F3F8);
   static const senderBubbleDark = Color(0xFF5B54E8);
-  static const receiverBubbleDark = Color(0xFF242736);
+  static const receiverBubbleDark = Color(0xFF2D324A);
 
   // Gradients
   static const primaryGradient = LinearGradient(
