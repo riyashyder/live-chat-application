@@ -93,10 +93,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.chat_rounded,
-                            color: Colors.white,
-                            size: 40,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: Image.asset(
+                              'assets/images/app_icon.png',
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 24),

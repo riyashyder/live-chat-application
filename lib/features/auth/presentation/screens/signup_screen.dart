@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:chat_app/core/theme/app_colors.dart';
 import 'package:chat_app/core/widgets/glass_container.dart';
 import 'package:chat_app/features/auth/presentation/providers/auth_provider.dart';
@@ -23,7 +21,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
-  File? _profileImage;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
@@ -57,19 +54,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 512,
-      maxHeight: 512,
-      imageQuality: 75,
-    );
-    if (picked != null) {
-      setState(() => _profileImage = File(picked.path));
-    }
-  }
-
   bool _isFormValid() {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
@@ -89,7 +73,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
           password: _passwordController.text,
-          profileImage: _profileImage,
+          profileImage: null,
         );
   }
 
@@ -127,49 +111,27 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 20),
-                      // Profile image picker
-                      GestureDetector(
-                        onTap: _pickImage,
-                        child: Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundColor:
-                                  AppColors.primary.withValues(alpha: 0.2),
-                              backgroundImage: _profileImage != null
-                                  ? FileImage(_profileImage!)
-                                  : null,
-                              child: _profileImage == null
-                                  ? const Icon(
-                                      Icons.person_rounded,
-                                      size: 50,
-                                      color: AppColors.primary,
-                                    )
-                                  : null,
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  gradient: AppColors.primaryGradient,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Theme.of(context)
-                                        .scaffoldBackgroundColor,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.camera_alt_rounded,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                              ),
+                      // Logo / Brand
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.4),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
                             ),
                           ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: Image.asset(
+                            'assets/images/app_icon.png',
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 24),

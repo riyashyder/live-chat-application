@@ -80,10 +80,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.chat_rounded,
-                    color: Colors.white,
-                    size: 50,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: Image.asset(
+                      'assets/images/app_icon.png',
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
@@ -93,7 +95,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 child: Column(
                   children: [
                     Text(
-                      'ChatApp',
+                      'Chatify',
                       style: Theme.of(context)
                           .textTheme
                           .headlineLarge
