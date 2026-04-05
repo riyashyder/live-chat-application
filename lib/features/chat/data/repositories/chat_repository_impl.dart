@@ -38,12 +38,12 @@ class ChatRepositoryImpl implements ChatRepository {
         final data = doc.data() as Map<String, dynamic>;
         final chat = ChatEntity.fromMap(data);
 
-        // Check if chat was cleared for the current user
+        
         final userClearedAt = chat.clearedAt['clearedAt_$_currentUid'];
         if (userClearedAt != null &&
             chat.lastMessageTime != null &&
             chat.lastMessageTime!.isBefore(userClearedAt)) {
-          // If cleared after the last message, blank out the preview
+          
           return ChatEntity(
             chatId: chat.chatId,
             participants: chat.participants,
@@ -75,7 +75,7 @@ class ChatRepositoryImpl implements ChatRepository {
             .where((message) => !message.deletedFor.contains(_currentUid))
             .toList();
 
-        // Background update for delivery status
+        
         for (final message in messages) {
           if (message.receiverId == _currentUid &&
               message.status == MessageStatus.sent) {
@@ -114,7 +114,7 @@ class ChatRepositoryImpl implements ChatRepository {
 
     final batch = _firestore.batch();
 
-    // Add message
+   
     batch.set(
       _chatsRef
           .doc(chatId)
@@ -123,7 +123,7 @@ class ChatRepositoryImpl implements ChatRepository {
       message.toMap(),
     );
 
-    // Update chat metadata
+    
     batch.update(_chatsRef.doc(chatId), {
       FirestoreConstants.lastMessage: text,
       FirestoreConstants.lastMessageTime: FieldValue.serverTimestamp(),
@@ -146,7 +146,7 @@ class ChatRepositoryImpl implements ChatRepository {
     final finalMessageId = messageId ?? _uuid.v4();
 
     try {
-      // Upload image to Cloudinary
+     
       final imageUrl = await _cloudinary.uploadImage(
         imageFile,
         'chat_images/$chatId',
@@ -195,7 +195,7 @@ class ChatRepositoryImpl implements ChatRepository {
     final finalMessageId = messageId ?? _uuid.v4();
 
     try {
-      // Upload audio to Cloudinary
+     
       final audioUrl = await _cloudinary.uploadAudio(
         audioFile,
         'chat_audio/$chatId',
@@ -236,7 +236,7 @@ class ChatRepositoryImpl implements ChatRepository {
 
   @override
   Future<String> getOrCreateChat(String otherUserId) async {
-    // Generate deterministic chat ID
+    
     final ids = [_currentUid, otherUserId]..sort();
     final chatId = ids.join('_');
 
@@ -292,12 +292,12 @@ class ChatRepositoryImpl implements ChatRepository {
 
   @override
   Future<void> markMessagesAsRead(String chatId) async {
-    // Reset unread count for current user
+    
     await _chatsRef.doc(chatId).update({
       'unreadCount_$_currentUid': 0,
     });
 
-    // Update message statuses to read
+    
     final unreadMessages = await _chatsRef
         .doc(chatId)
         .collection(FirestoreConstants.messagesCollection)
@@ -317,7 +317,7 @@ class ChatRepositoryImpl implements ChatRepository {
         'readAt': now,
       };
 
-      // If it hasn't been marked as delivered yet, do it now
+      
       if (data['deliveredAt'] == null) {
         updates['deliveredAt'] = now;
       }
@@ -344,16 +344,10 @@ class ChatRepositoryImpl implements ChatRepository {
         'audioDuration': null,
       });
 
-      // Also update the chat document's preview if this was the last message
-      // Note: In a real app, you'd compare messageId with lastMessageId
-      // For now, we'll unconditionally update the preview if needed, 
-      // but to be safe we'll just update it to "This message was deleted" 
-      // if it happens to be the last one.
+  
       final chatDoc = await _chatsRef.doc(chatId).get();
       if (chatDoc.exists) {
-        // Since we don't store lastMessageId yet, we'll just check if this message 
-        // was deleted and if the chat's lastMessage matches it. 
-        // A better way is to update the chat doc directly.
+      
         batch.update(_chatsRef.doc(chatId), {
           'lastMessage': '🚫 This message was deleted',
         });
@@ -381,7 +375,7 @@ class ChatRepositoryImpl implements ChatRepository {
       });
     }
 
-    // Update parent chat document with clearedAt timestamp
+    
     batch.update(_chatsRef.doc(chatId), {
       'clearedAt_$_currentUid': FieldValue.serverTimestamp(),
       'unreadCount_$_currentUid': 0,
@@ -404,7 +398,7 @@ class ChatRepositoryImpl implements ChatRepository {
         .doc(chatId)
         .collection(FirestoreConstants.messagesCollection)
         .orderBy(FirestoreConstants.timestamp, descending: true)
-        .limit(10) // Only look at the 10 most recent to find a visible one
+        .limit(10) 
         .snapshots()
         .map((snapshot) {
       if (snapshot.docs.isEmpty) return null;

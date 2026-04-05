@@ -110,7 +110,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Waveform / Progress bar
+                
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(

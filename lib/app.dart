@@ -22,13 +22,13 @@ class ChatApp extends ConsumerWidget {
     final authState = ref.watch(authStateChangesProvider);
     final isSplashDone = ref.watch(splashTimeoutProvider);
 
-    // Connectivity handling
+    
     ref.listen(connectivityProvider, (previous, next) {
       final results = next.valueOrNull ?? [];
       final isOffline = results.contains(ConnectivityResult.none);
       
       if (isOffline) {
-        // Push NoNetworkScreen if not already showing
+        
         navigatorKey.currentState?.push(
           MaterialPageRoute(
             settings: const RouteSettings(name: '/no-network'),
@@ -36,14 +36,14 @@ class ChatApp extends ConsumerWidget {
           ),
         );
       } else {
-        // Pop NoNetworkScreen if it's the current route
+        
         navigatorKey.currentState?.popUntil((route) {
           return route.settings.name != '/no-network';
         });
       }
     });
 
-    // Explicitly handle transitions to clear navigation stack
+    
     ref.listen(authStateChangesProvider, (previous, next) {
       if (!isSplashDone || next.isLoading) return;
 
@@ -65,7 +65,7 @@ class ChatApp extends ConsumerWidget {
       }
     });
 
-    // Set timeout if not done
+    
     if (!isSplashDone) {
       Future.delayed(const Duration(seconds: 2), () {
         ref.read(splashTimeoutProvider.notifier).state = true;

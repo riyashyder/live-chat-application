@@ -70,8 +70,7 @@ class ChatListScreen extends ConsumerWidget {
             ),
           ),
           data: (chats) {
-            // Avoid flickering "No conversations" if we are still refreshing
-            // but have an empty list (likely initial cache miss or transition)
+            
             if (chats.isEmpty &&
                 (chatsAsync.isRefreshing || chatsAsync.isLoading)) {
               return const ChatListShimmer(key: ValueKey('shimmer_refreshing'));
@@ -326,7 +325,7 @@ class _ChatTile extends ConsumerWidget {
 
   String _getLastMessagePreview(
       ChatEntity chat, MessageEntity? msg, bool isLoaded) {
-    // If we have successfully loaded the specific last message for this user, follow it
+    
     if (isLoaded) {
       if (msg == null) return 'Start a conversation';
       if (msg.isDeleted) return '🚫 This message was deleted';
@@ -335,10 +334,10 @@ class _ChatTile extends ConsumerWidget {
       return msg.text ?? '';
     }
 
-    // Fallback while loading or if stream is unavailable
+    
     if (chat.lastMessage.isEmpty) return 'Start a conversation';
 
-    // Check if the chat was cleared after the last message was sent
+    
     final clearedAt = chat.clearedAt['clearedAt_$currentUserId'];
     if (clearedAt != null && chat.lastMessageTime != null) {
       if (chat.lastMessageTime!.isBefore(clearedAt)) {

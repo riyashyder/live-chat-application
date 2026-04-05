@@ -453,7 +453,7 @@ class _ChatInputBarState extends State<ChatInputBar>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        // Attachment Button
+        
         Container(
           margin: const EdgeInsets.only(bottom: 2),
           decoration: BoxDecoration(
@@ -479,7 +479,7 @@ class _ChatInputBarState extends State<ChatInputBar>
         ).animate().scale(duration: 200.ms),
         const SizedBox(width: 8),
         
-        // Input Field
+        
         Expanded(
           child: Container(
             constraints: const BoxConstraints(maxHeight: 120),
@@ -559,7 +559,7 @@ class _ChatInputBarState extends State<ChatInputBar>
         ),
         const SizedBox(width: 8),
         
-        // Send/Record Button
+        
         GestureDetector(
           onTap: _hasText ? _sendMessage : null,
           onLongPressStart: (_) => !_hasText ? _startRecording() : null,

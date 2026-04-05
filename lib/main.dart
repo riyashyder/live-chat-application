@@ -8,10 +8,10 @@ import 'core/providers/firebase_providers.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
+  
   await Firebase.initializeApp();
 
-  // Set system UI overlay style
+  
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

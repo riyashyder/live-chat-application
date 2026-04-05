@@ -197,9 +197,7 @@ class MessageBubble extends StatelessWidget {
                 Hero(
                   tag: 'image_${message.id}',
                   child: ImageFiltered(
-                    // Blur if it's a network image and not yet "viewed"? 
-                    // Or always blur for privacy until tap? 
-                    // Let's keep existing blur logic but apply it to local too for consistency.
+                    
                     imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: message.localFilePath != null
                         ? Image.file(
@@ -228,7 +226,7 @@ class MessageBubble extends StatelessWidget {
                               ),
                   ),
                 ),
-                // Overlay for uploading or viewing
+                
                 Container(
                   width: 220,
                   height: 220,

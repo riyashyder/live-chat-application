@@ -121,16 +121,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> signOut() async {
     state = state.copyWith(isLoading: true);
     try {
-      // 1. Sign out from Firebase (updates presence)
+     
       await _repository.signOut();
       
-      // 2. Clear local data and persistence
+      
       await _repository.clearAllData();
       
-      // 3. Clear image cache
+      
       await DefaultCacheManager().emptyCache();
 
-      // 4. Invalidate providers to force them to clear on next login
+      
       _ref.invalidate(currentUserProvider);
       _ref.invalidate(authStateProvider);
       

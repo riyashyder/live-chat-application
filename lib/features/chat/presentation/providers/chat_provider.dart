@@ -11,7 +11,7 @@ import 'package:chat_app/features/chat/domain/entities/chat_entity.dart';
 import 'package:chat_app/features/chat/domain/repositories/chat_repository.dart';
 import 'package:uuid/uuid.dart';
 
-// Chat Repository Provider
+
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
   return ChatRepositoryImpl(
     auth: ref.watch(firebaseAuthProvider),
@@ -20,14 +20,14 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
   );
 });
 
-// All chats stream
+
 final chatsStreamProvider = StreamProvider.autoDispose<List<ChatEntity>>((ref) {
   final uid = ref.watch(currentUserIdProvider);
   if (uid == null) return Stream.value([]);
   return ref.watch(chatRepositoryProvider).getChats();
 });
 
-// Messages stream for a specific chat
+
 final messagesStreamProvider =
     StreamProvider.autoDispose.family<List<MessageEntity>, String>((ref, chatId) {
   final uid = ref.watch(currentUserIdProvider);
@@ -35,7 +35,7 @@ final messagesStreamProvider =
   return ref.watch(chatRepositoryProvider).getMessages(chatId);
 });
 
-// Typing status for a specific chat
+
 final typingStatusProvider =
     StreamProvider.family<bool, ({String chatId, String otherUserId})>(
         (ref, params) {
@@ -44,7 +44,7 @@ final typingStatusProvider =
       .getTypingStatus(params.chatId, params.otherUserId);
 });
 
-// Chat actions notifier
+
 final chatActionsProvider =
     StateNotifierProvider<ChatActionsNotifier, ChatActionState>((ref) {
   return ChatActionsNotifier(
@@ -61,7 +61,7 @@ class ChatActionState {
   final bool isSending;
   final bool isRecording;
   final String? error;
-  final Map<String, List<MessageEntity>> pendingMessages; // chatId -> list of messages
+  final Map<String, List<MessageEntity>> pendingMessages; 
 
   const ChatActionState({
     this.isSending = false,
@@ -135,7 +135,7 @@ class ChatActionsNotifier extends StateNotifier<ChatActionState> {
       localFilePath: imageFile.path,
     );
 
-    // Add to pending
+    
     final currentPending = Map<String, List<MessageEntity>>.from(state.pendingMessages);
     final chatPending = List<MessageEntity>.from(currentPending[chatId] ?? []);
     chatPending.add(tempMessage);
@@ -151,17 +151,17 @@ class ChatActionsNotifier extends StateNotifier<ChatActionState> {
         messageId: tempMessage.id,
       );
       
-      // Wait a bit to ensure Firestore syncs before removing from pending
+      
       await Future.delayed(const Duration(seconds: 2));
       
-      // Remove from pending
+      
       final updatedPending = Map<String, List<MessageEntity>>.from(state.pendingMessages);
       final updatedChatPending = List<MessageEntity>.from(updatedPending[chatId] ?? []);
       updatedChatPending.removeWhere((m) => m.id == tempMessage.id);
       updatedPending[chatId] = updatedChatPending;
       state = state.copyWith(pendingMessages: updatedPending);
     } catch (e) {
-      // Remove from pending on error
+      
       final updatedPending = Map<String, List<MessageEntity>>.from(state.pendingMessages);
       final updatedChatPending = List<MessageEntity>.from(updatedPending[chatId] ?? []);
       updatedChatPending.removeWhere((m) => m.id == tempMessage.id);
@@ -190,7 +190,7 @@ class ChatActionsNotifier extends StateNotifier<ChatActionState> {
       localFilePath: audioFile.path,
     );
 
-    // Add to pending
+    
     final currentPending = Map<String, List<MessageEntity>>.from(state.pendingMessages);
     final chatPending = List<MessageEntity>.from(currentPending[chatId] ?? []);
     chatPending.add(tempMessage);
@@ -207,7 +207,7 @@ class ChatActionsNotifier extends StateNotifier<ChatActionState> {
         messageId: tempMessage.id,
       );
       
-      // Safety delay
+      
       await Future.delayed(const Duration(seconds: 2));
 
       final updatedPending = Map<String, List<MessageEntity>>.from(state.pendingMessages);
@@ -246,7 +246,7 @@ class ChatActionsNotifier extends StateNotifier<ChatActionState> {
 
   Future<void> deleteMessage(String chatId, String messageId, {required bool forEveryone}) async {
     try {
-      // 1. Check if it's a pending message (optimistic UI)
+      
       final chatPending = state.pendingMessages[chatId];
       if (chatPending != null) {
         final messageIndex = chatPending.indexWhere((m) => m.id == messageId);
@@ -264,7 +264,7 @@ class ChatActionsNotifier extends StateNotifier<ChatActionState> {
         }
       }
 
-      // 2. Delete from repository (Firestore)
+      
       await _repository.deleteMessage(chatId, messageId, forEveryone: forEveryone);
     } catch (e) {
       debugPrint('ChatActionsNotifier: Failed to delete message $messageId: $e');

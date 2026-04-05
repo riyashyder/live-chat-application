@@ -136,7 +136,7 @@ class AuthRepositoryImpl implements AuthRepository {
     
     final currentUid = _auth.currentUser?.uid;
     
-    // Perform name and email searches in parallel
+    
     final results = await Future.wait([
       _usersRef
           .where(FirestoreConstants.name, isGreaterThanOrEqualTo: query)
@@ -155,7 +155,7 @@ class AuthRepositoryImpl implements AuthRepository {
     
     final Map<String, UserEntity> usersMap = {};
     
-    // Process name search results
+    
     for (final doc in nameSnapshot.docs) {
       final user = UserEntity.fromMap(doc.data() as Map<String, dynamic>);
       if (user.uid != currentUid) {
@@ -163,7 +163,7 @@ class AuthRepositoryImpl implements AuthRepository {
       }
     }
     
-    // Process email search results (merging with name results)
+    
     for (final doc in emailSnapshot.docs) {
       final user = UserEntity.fromMap(doc.data() as Map<String, dynamic>);
       if (user.uid != currentUid) {
@@ -200,10 +200,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> clearAllData() async {
     try {
-      // Clear Firestore offline persistence
+      
       await _firestore.clearPersistence();
     } catch (e) {
-      // Ignore errors if persistence is already cleared or busy
+      
     }
   }
 

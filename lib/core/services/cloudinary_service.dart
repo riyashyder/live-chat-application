@@ -14,7 +14,7 @@ class CloudinaryService {
       final String url =
           'https://api.cloudinary.com/v1_1/${CloudinaryConstants.cloudName}/upload';
 
-      // For audio, Cloudinary usually uses 'video' as resource_type or 'auto'
+  
       final effectiveResourceType = resourceType ?? 'auto';
 
       final formData = FormData.fromMap({
@@ -34,7 +34,7 @@ class CloudinaryService {
       }
       return null;
     } catch (e) {
-      // Return null on error
+     
       return null;
     }
   }
@@ -44,7 +44,7 @@ class CloudinaryService {
   }
 
   Future<String?> uploadAudio(File file, String folder) async {
-    // Cloudinary treats audio as 'video' or 'auto'
+    
     return uploadFile(file: file, folder: folder, resourceType: 'video');
   }
 }

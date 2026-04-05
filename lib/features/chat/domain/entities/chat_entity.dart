@@ -51,7 +51,7 @@ class ChatEntity {
   }
 
   factory ChatEntity.fromMap(Map<String, dynamic> map) {
-    // Extract unread counts
+    
     final unreadCounts = <String, int>{};
     final typingStatus = <String, bool>{};
     final clearedAt = <String, DateTime>{};

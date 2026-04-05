@@ -20,7 +20,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _nameController = TextEditingController();
   final _statusController = TextEditingController();
-  String? _editingField; // 'name', 'status', or null
+  String? _editingField; 
   bool _isLoading = false;
 
   @override
@@ -265,7 +265,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final userAsync = ref.watch(currentUserProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Keep controllers in sync with data when not editing
+    
     ref.listen(currentUserProvider, (previous, next) {
       next.whenData((user) {
         if (user != null && _editingField == null) {
@@ -296,7 +296,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                // Profile Image
+                
                 GestureDetector(
                   onTap: _pickAndUploadImage,
                   child: Stack(
@@ -360,7 +360,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // User info
+               
                 GlassContainer(
                   opacity: isDark ? 0.08 : 0.5,
                   blur: 15,
@@ -375,10 +375,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         isEditing: _editingField == 'name',
                         onEdit: () => setState(() => _editingField = 'name'),
                         value: user.name,
-                        maxLength: 50, // Reasonable limit for name
+                        maxLength: 50, 
                       ),
                       const Divider(height: 24),
-                      // Status
+                    
                       _buildField(
                         icon: Icons.info_outline,
                         label: 'Status',
@@ -386,17 +386,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         isEditing: _editingField == 'status',
                         onEdit: () => setState(() => _editingField = 'status'),
                         value: user.statusText,
-                        maxLength: 250, // As requested
+                        maxLength: 250, 
                       ),
                       const Divider(height: 24),
-                      // Email (non-editable)
+                      
                       _buildInfoRow(
                         icon: Icons.email_outlined,
                         label: 'Email',
                         value: user.email,
                       ),
                       const Divider(height: 24),
-                      // Last seen
+                      
                       _buildInfoRow(
                         icon: Icons.access_time_rounded,
                         label: 'Last Seen',
@@ -409,7 +409,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Theme toggle
+                
                 GlassContainer(
                   opacity: isDark ? 0.08 : 0.5,
                   blur: 15,
@@ -443,7 +443,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Sign out button
+                
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(

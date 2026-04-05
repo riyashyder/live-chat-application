@@ -11,7 +11,7 @@ class MessageEntity {
   final String? text;
   final String? imageUrl;
   final String? audioUrl;
-  final int? audioDuration; // in seconds
+  final int? audioDuration; 
   final MessageType type;
   final DateTime timestamp;
   final MessageStatus status;
@@ -19,7 +19,7 @@ class MessageEntity {
   final DateTime? readAt;
   final bool isDeleted;
   final List<String> deletedFor;
-  final String? localFilePath; // For optimistic UI updates
+  final String? localFilePath; 
 
   const MessageEntity({
     required this.id,
@@ -55,7 +55,7 @@ class MessageEntity {
       'status': status.name,
       'isDeleted': isDeleted,
       'deletedFor': deletedFor,
-      // localFilePath is not stored in Firestore
+      
     };
   }
 
@@ -89,7 +89,7 @@ class MessageEntity {
           : MessageStatus.sent,
       isDeleted: map['isDeleted'] ?? false,
       deletedFor: List<String>.from(map['deletedFor'] ?? []),
-      localFilePath: null, // Always null when loading from Firestore
+      localFilePath: null, 
     );
   }
 

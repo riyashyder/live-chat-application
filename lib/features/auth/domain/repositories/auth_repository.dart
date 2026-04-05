@@ -23,6 +23,5 @@ abstract class AuthRepository {
     File? profileImage,
   });
 
-  /// Clears all local data, persistence, and caches
   Future<void> clearAllData();
 }

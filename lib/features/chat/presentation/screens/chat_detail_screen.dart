@@ -37,7 +37,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   @override
   void initState() {
     super.initState();
-    // Mark messages as read when opening chat
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref.read(chatActionsProvider.notifier).markAsRead(widget.chatId);
@@ -47,11 +47,11 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-    // Stop typing indicator when leaving - wrap in try-catch as ref might be defunct
+    
     try {
       ref.read(chatActionsProvider.notifier).onTypingChanged(widget.chatId, '');
     } catch (_) {
-      // Ignore if already disposed or defunct
+      
     }
     super.dispose();
   }
@@ -184,7 +184,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       ),
       body: Column(
         children: [
-          // Messages list
+          
           Expanded(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 500),
@@ -199,15 +199,15 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                   child: Text('Error: $e'),
                 ),
                 data: (firestoreMessages) {
-                  // Separate by ID, prioritizing firestore messages
+                  
                   final Map<String, MessageEntity> messageMap = {};
                   
-                  // Add firestore messages first (they are the source of truth)
+                  
                   for (final msg in firestoreMessages) {
                     messageMap[msg.id] = msg;
                   }
                   
-                  // Add pending messages only if they aren't already in the list
+                  
                   for (final pending in pendingMessages) {
                     if (!messageMap.containsKey(pending.id)) {
                       messageMap[pending.id] = pending;
@@ -217,7 +217,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                   final messages = messageMap.values.toList()
                     ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
-                  // Mark new messages as read
+                  
                   if (messages.isNotEmpty) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (!mounted) return;
@@ -247,7 +247,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     itemCount: messages.length +
                         (typingAsync.valueOrNull == true ? 1 : 0),
                     itemBuilder: (context, index) {
-                    // Show typing indicator at the top (index 0 when reversed)
+                    
                     if (typingAsync.valueOrNull == true && index == 0) {
                       return const TypingIndicator();
                     }
@@ -257,7 +257,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     final message = messages[msgIndex];
                     final isMe = message.senderId == currentUserId;
 
-                    // Show tail for first message or when sender changes
+                    
                     final showTail = msgIndex == messages.length - 1 ||
                         messages[msgIndex + 1].senderId != message.senderId;
 
@@ -289,7 +289,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             ),
           ),
         ),
-          // Input bar
+          
           ChatInputBar(
             onSendText: (text) {
               ref.read(chatActionsProvider.notifier).sendTextMessage(
