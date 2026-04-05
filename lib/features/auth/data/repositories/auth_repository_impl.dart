@@ -132,17 +132,46 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<List<UserEntity>> searchUsers(String query) async {
+    if (query.isEmpty) return [];
+    
     final currentUid = _auth.currentUser?.uid;
-    final snapshot = await _usersRef
-        .where(FirestoreConstants.name, isGreaterThanOrEqualTo: query)
-        .where(FirestoreConstants.name, isLessThanOrEqualTo: '$query\uf8ff')
-        .limit(20)
-        .get();
+    
+    // Perform name and email searches in parallel
+    final results = await Future.wait([
+      _usersRef
+          .where(FirestoreConstants.name, isGreaterThanOrEqualTo: query)
+          .where(FirestoreConstants.name, isLessThanOrEqualTo: '$query\uf8ff')
+          .limit(20)
+          .get(),
+      _usersRef
+          .where(FirestoreConstants.email, isGreaterThanOrEqualTo: query)
+          .where(FirestoreConstants.email, isLessThanOrEqualTo: '$query\uf8ff')
+          .limit(20)
+          .get(),
+    ]);
 
-    return snapshot.docs
-        .map((doc) => UserEntity.fromMap(doc.data() as Map<String, dynamic>))
-        .where((user) => user.uid != currentUid)
-        .toList();
+    final nameSnapshot = results[0];
+    final emailSnapshot = results[1];
+    
+    final Map<String, UserEntity> usersMap = {};
+    
+    // Process name search results
+    for (final doc in nameSnapshot.docs) {
+      final user = UserEntity.fromMap(doc.data() as Map<String, dynamic>);
+      if (user.uid != currentUid) {
+        usersMap[user.uid] = user;
+      }
+    }
+    
+    // Process email search results (merging with name results)
+    for (final doc in emailSnapshot.docs) {
+      final user = UserEntity.fromMap(doc.data() as Map<String, dynamic>);
+      if (user.uid != currentUid) {
+        usersMap[user.uid] = user;
+      }
+    }
+
+    return usersMap.values.toList();
   }
 
   @override
