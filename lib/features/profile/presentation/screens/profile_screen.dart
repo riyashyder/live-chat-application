@@ -18,7 +18,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _nameController = TextEditingController();
   final _statusController = TextEditingController();
-  bool _isEditing = false;
+  String? _editingField; // 'name', 'status', or null
   bool _isLoading = false;
 
   @override
@@ -141,7 +141,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             statusText: _statusController.text.trim(),
           );
       ref.invalidate(currentUserProvider);
-      setState(() => _isEditing = false);
+      setState(() => _editingField = null);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -209,7 +209,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     // Keep controllers in sync with data when not editing
     ref.listen(currentUserProvider, (previous, next) {
       next.whenData((user) {
-        if (user != null && !_isEditing) {
+        if (user != null && _editingField == null) {
           _nameController.text = user.name;
           _statusController.text = user.statusText;
         }
@@ -220,7 +220,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       appBar: AppBar(
         title: const Text('Profile'),
         actions: [
-          if (_isEditing)
+          if (_editingField != null)
             IconButton(
               onPressed: _isLoading ? null : _saveProfile,
               icon: const Icon(Icons.check_rounded),
@@ -315,7 +315,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         icon: Icons.person_outline,
                         label: 'Name',
                         controller: _nameController,
-                        isEditing: _isEditing,
+                        isEditing: _editingField == 'name',
+                        onEdit: () => setState(() => _editingField = 'name'),
                         value: user.name,
                       ),
                       const Divider(height: 24),
@@ -324,7 +325,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         icon: Icons.info_outline,
                         label: 'Status',
                         controller: _statusController,
-                        isEditing: _isEditing,
+                        isEditing: _editingField == 'status',
+                        onEdit: () => setState(() => _editingField = 'status'),
                         value: user.statusText,
                       ),
                       const Divider(height: 24),
@@ -415,6 +417,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required String label,
     required TextEditingController controller,
     required bool isEditing,
+    required VoidCallback onEdit,
     required String value,
   }) {
     return Row(
@@ -450,7 +453,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         if (!isEditing)
           IconButton(
-            onPressed: () => setState(() => _isEditing = true),
+            onPressed: onEdit,
             icon: const Icon(Icons.edit_rounded, size: 18, color: Colors.grey),
             constraints: const BoxConstraints(),
             padding: const EdgeInsets.all(4),
