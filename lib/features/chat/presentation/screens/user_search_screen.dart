@@ -41,7 +41,7 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
               controller: _searchController,
               autofocus: true,
               decoration: InputDecoration(
-                hintText: 'Search by name...',
+                hintText: 'Search by name or email ID',
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _query.isNotEmpty
                     ? IconButton(
@@ -88,7 +88,8 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
                 }
 
                 final currentUserId = ref.watch(currentUserIdProvider);
-                final filteredUsers = users.where((u) => u.uid != currentUserId).toList();
+                final filteredUsers =
+                    users.where((u) => u.uid != currentUserId).toList();
 
                 if (filteredUsers.isEmpty) {
                   return Center(
@@ -136,9 +137,8 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
   }
 
   Future<void> _startChat(UserEntity user) async {
-    final chatId = await ref
-        .read(chatActionsProvider.notifier)
-        .getOrCreateChat(user.uid);
+    final chatId =
+        await ref.read(chatActionsProvider.notifier).getOrCreateChat(user.uid);
 
     if (mounted) {
       Navigator.pushReplacement(
