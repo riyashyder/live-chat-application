@@ -4,6 +4,7 @@ import 'package:chat_app/core/theme/app_colors.dart';
 import 'package:chat_app/core/widgets/glass_container.dart';
 import 'package:chat_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:chat_app/features/auth/presentation/screens/signup_screen.dart';
+import 'package:chat_app/core/utils/validators.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -49,8 +50,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     super.dispose();
   }
 
+  bool _isFormValid() {
+    return Validators.isValidEmail(_emailController.text.trim()) &&
+        Validators.isValidPassword(_passwordController.text);
+  }
+
   Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_isFormValid()) return;
 
     await ref.read(authNotifierProvider.notifier).signIn(
           email: _emailController.text.trim(),
@@ -130,24 +136,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               TextFormField(
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
+                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                onChanged: (_) => setState(() {}),
                                 decoration: const InputDecoration(
                                   hintText: 'Email address',
                                   prefixIcon: Icon(Icons.email_outlined),
                                 ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your email';
-                                  }
-                                  if (!value.contains('@')) {
-                                    return 'Please enter a valid email';
-                                  }
-                                  return null;
-                                },
+                                validator: Validators.validateEmail,
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
                                 controller: _passwordController,
                                 obscureText: _obscurePassword,
+                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                onChanged: (_) => setState(() {}),
                                 decoration: InputDecoration(
                                   hintText: 'Password',
                                   prefixIcon:
@@ -162,15 +164,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                         _obscurePassword = !_obscurePassword),
                                   ),
                                 ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your password';
-                                  }
-                                  if (value.length < 6) {
-                                    return 'Password must be at least 6 characters';
-                                  }
-                                  return null;
-                                },
+                                validator: Validators.validatePassword,
                               ),
                               if (authState.error != null) ...[
                                 const SizedBox(height: 12),
@@ -204,8 +198,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 width: double.infinity,
                                 height: 52,
                                 child: ElevatedButton(
-                                  onPressed:
-                                      authState.isLoading ? null : _handleLogin,
+                                  onPressed: authState.isLoading || !_isFormValid()
+                                      ? null
+                                      : _handleLogin,
                                   style: ElevatedButton.styleFrom(
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),

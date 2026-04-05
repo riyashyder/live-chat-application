@@ -105,3 +105,39 @@ class MessageShimmer extends StatelessWidget {
     );
   }
 }
+class ProfileShimmer extends StatelessWidget {
+  const ProfileShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ShimmerLoading(
+      isLoading: true,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            const CircleAvatar(radius: 60, backgroundColor: Colors.white),
+            const SizedBox(height: 32),
+            Container(
+              width: double.infinity,
+              height: 200,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              width: double.infinity,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

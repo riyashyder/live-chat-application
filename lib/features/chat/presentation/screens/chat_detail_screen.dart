@@ -11,9 +11,11 @@ import 'package:chat_app/features/chat/domain/entities/message_entity.dart';
 import 'package:chat_app/features/chat/presentation/widgets/message_bubble.dart';
 import 'package:chat_app/features/chat/presentation/widgets/typing_indicator.dart';
 import 'package:chat_app/features/chat/presentation/widgets/chat_input_bar.dart';
+import 'package:chat_app/features/chat/presentation/widgets/audio_player_widget.dart';
 import 'package:chat_app/features/chat/presentation/screens/full_image_screen.dart';
 import 'package:chat_app/features/chat/presentation/screens/message_info_screen.dart';
 import 'package:chat_app/core/widgets/shimmer_loading.dart';
+import 'package:chat_app/core/utils/media_saver.dart';
 
 class ChatDetailScreen extends ConsumerStatefulWidget {
   final UserEntity otherUser;
@@ -233,6 +235,10 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     );
                   }
 
+                  if (messages.isEmpty) {
+                    return _buildEmptyState(displayUser.name);
+                  }
+
                   return ListView.builder(
                     key: const ValueKey('messages_list'),
                     controller: _scrollController,
@@ -266,6 +272,14 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         onLongPress: () => _showMessageOptions(message),
                         onImageTap: message.type == MessageType.image
                             ? () => _openFullImage(message)
+                            : null,
+                        audioPlayer: message.type == MessageType.audio
+                            ? AudioPlayerWidget(
+                                audioUrl: message.audioUrl ?? message.localFilePath ?? '',
+                                durationInSeconds: message.audioDuration,
+                                isMe: isMe,
+                                isLocal: message.audioUrl == null,
+                              )
                             : null,
                       ),
                     );
@@ -325,6 +339,23 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (message.type == MessageType.image)
+              ListTile(
+                leading: const Icon(Icons.download_rounded, color: AppColors.primary),
+                title: const Text('Save to Gallery'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final success = await MediaSaver.saveImage(message.imageUrl, message.localFilePath);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(success ? 'Image saved to gallery!' : 'Failed to save image.'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+              ),
             if (message.senderId == ref.read(currentUserIdProvider))
               ListTile(
                 leading: const Icon(Icons.info_outline_rounded,
@@ -415,6 +446,49 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           return FadeTransition(opacity: anim, child: child);
         },
         transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String userName) {
+    return Center(
+      key: const ValueKey('messages_empty'),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.chat_bubble_outline_rounded,
+                size: 80,
+                color: AppColors.primary.withValues(alpha: 0.2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Say Hi to $userName! 👋',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Start a conversation with a message\nor share something interesting.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.grey[500],
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

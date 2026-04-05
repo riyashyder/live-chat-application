@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:chat_app/core/theme/app_colors.dart';
 import 'package:chat_app/core/widgets/glass_container.dart';
 import 'package:chat_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:chat_app/core/utils/validators.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -69,8 +70,20 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
     }
   }
 
+  bool _isFormValid() {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+    
+    return Validators.isValidName(name) &&
+        Validators.isValidEmail(email) &&
+        Validators.isValidPassword(password) &&
+        password == confirmPassword;
+  }
+
   Future<void> _handleSignup() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_isFormValid()) return;
 
     await ref.read(authNotifierProvider.notifier).signUp(
           name: _nameController.text.trim(),
@@ -177,39 +190,32 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
                                 controller: _nameController,
                                 textCapitalization:
                                     TextCapitalization.words,
+                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                onChanged: (_) => setState(() {}),
                                 decoration: const InputDecoration(
                                   hintText: 'Full Name',
                                   prefixIcon: Icon(Icons.person_outline),
                                 ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Please enter your name';
-                                  }
-                                  return null;
-                                },
+                                validator: Validators.validateName,
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
+                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                onChanged: (_) => setState(() {}),
                                 decoration: const InputDecoration(
                                   hintText: 'Email address',
                                   prefixIcon: Icon(Icons.email_outlined),
                                 ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your email';
-                                  }
-                                  if (!value.contains('@')) {
-                                    return 'Please enter a valid email';
-                                  }
-                                  return null;
-                                },
+                                validator: Validators.validateEmail,
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
                                 controller: _passwordController,
                                 obscureText: _obscurePassword,
+                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                onChanged: (_) => setState(() {}),
                                 decoration: InputDecoration(
                                   hintText: 'Password',
                                   prefixIcon:
@@ -224,20 +230,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
                                         _obscurePassword = !_obscurePassword),
                                   ),
                                 ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter a password';
-                                  }
-                                  if (value.length < 6) {
-                                    return 'Password must be at least 6 characters';
-                                  }
-                                  return null;
-                                },
+                                validator: Validators.validatePassword,
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
                                 controller: _confirmPasswordController,
                                 obscureText: _obscureConfirm,
+                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                                onChanged: (_) => setState(() {}),
                                 decoration: InputDecoration(
                                   hintText: 'Confirm Password',
                                   prefixIcon:
@@ -291,7 +291,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen>
                                 width: double.infinity,
                                 height: 52,
                                 child: ElevatedButton(
-                                  onPressed: authState.isLoading
+                                  onPressed: authState.isLoading || !_isFormValid()
                                       ? null
                                       : _handleSignup,
                                   style: ElevatedButton.styleFrom(

@@ -7,6 +7,7 @@ import 'package:chat_app/core/widgets/glass_container.dart';
 import 'package:chat_app/core/utils/date_formatter.dart';
 import 'package:chat_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:chat_app/features/auth/presentation/screens/login_screen.dart';
+import 'package:chat_app/core/widgets/shimmer_loading.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -228,9 +229,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ],
       ),
       body: userAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
+        loading: () => const ProfileShimmer(),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (user) {
           if (user == null) return const SizedBox.shrink();

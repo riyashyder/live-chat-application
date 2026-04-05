@@ -119,7 +119,7 @@ class ChatRepositoryImpl implements ChatRepository {
       _chatsRef
           .doc(chatId)
           .collection(FirestoreConstants.messagesCollection)
-          .doc(messageId),
+          .doc(finalMessageId),
       message.toMap(),
     );
 

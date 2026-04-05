@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chat_app/core/utils/media_saver.dart';
 
 class FullImageScreen extends StatelessWidget {
   final String imageUrl;
@@ -25,7 +26,24 @@ class FullImageScreen extends StatelessWidget {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: Text(hasImage ? '' : 'No Profile Picture'),
+        title: Text(hasImage || localFilePath != null ? '' : 'No Profile Picture'),
+        actions: [
+          if (hasImage || localFilePath != null)
+            IconButton(
+              icon: const Icon(Icons.download_rounded),
+              onPressed: () async {
+                final success = await MediaSaver.saveImage(imageUrl, localFilePath);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(success ? 'Image saved to gallery!' : 'Failed to save image.'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+            ),
+        ],
       ),
       body: Center(
         child: Hero(

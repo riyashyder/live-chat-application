@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chat_app/core/providers/firebase_providers.dart';
 import 'package:chat_app/core/providers/cloudinary_provider.dart';
@@ -186,7 +187,7 @@ class ChatActionsNotifier extends StateNotifier<ChatActionState> {
       timestamp: DateTime.now(),
       status: MessageStatus.sent,
       audioDuration: durationInSeconds,
-      // localFilePath could be added for audio too if needed, but the user specifically asked for images
+      localFilePath: audioFile.path,
     );
 
     // Add to pending
@@ -244,7 +245,30 @@ class ChatActionsNotifier extends StateNotifier<ChatActionState> {
   }
 
   Future<void> deleteMessage(String chatId, String messageId, {required bool forEveryone}) async {
-    await _repository.deleteMessage(chatId, messageId, forEveryone: forEveryone);
+    try {
+      // 1. Check if it's a pending message (optimistic UI)
+      final chatPending = state.pendingMessages[chatId];
+      if (chatPending != null) {
+        final messageIndex = chatPending.indexWhere((m) => m.id == messageId);
+        if (messageIndex != -1) {
+          final newChatPending = List<MessageEntity>.from(chatPending);
+          newChatPending.removeAt(messageIndex);
+          
+          final newPending = Map<String, List<MessageEntity>>.from(state.pendingMessages);
+          if (newChatPending.isEmpty) {
+            newPending.remove(chatId);
+          } else {
+            newPending[chatId] = newChatPending;
+          }
+          state = state.copyWith(pendingMessages: newPending);
+        }
+      }
+
+      // 2. Delete from repository (Firestore)
+      await _repository.deleteMessage(chatId, messageId, forEveryone: forEveryone);
+    } catch (e) {
+      debugPrint('ChatActionsNotifier: Failed to delete message $messageId: $e');
+    }
   }
 
   Future<void> clearChat(String chatId) async {

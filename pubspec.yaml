@@ -43,6 +43,7 @@ dependencies:
   emoji_picker_flutter: ^4.4.0
   flutter_cache_manager: ^3.4.1
   flutter_animate: ^4.5.2
+  gal: ^2.3.2
 
 dependency_overrides:
   record_platform_interface: 1.1.0
