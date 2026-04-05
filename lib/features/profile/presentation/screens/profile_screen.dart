@@ -318,6 +318,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         isEditing: _editingField == 'name',
                         onEdit: () => setState(() => _editingField = 'name'),
                         value: user.name,
+                        maxLength: 50, // Reasonable limit for name
                       ),
                       const Divider(height: 24),
                       // Status
@@ -328,6 +329,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         isEditing: _editingField == 'status',
                         onEdit: () => setState(() => _editingField = 'status'),
                         value: user.statusText,
+                        maxLength: 250, // As requested
                       ),
                       const Divider(height: 24),
                       // Email (non-editable)
@@ -419,10 +421,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required bool isEditing,
     required VoidCallback onEdit,
     required String value,
+    int? maxLength,
   }) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: AppColors.primary, size: 22),
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Icon(icon, color: AppColors.primary, size: 22),
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -437,6 +444,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ? TextField(
                       controller: controller,
                       autofocus: true,
+                      maxLength: maxLength,
                       style: Theme.of(context).textTheme.bodyLarge,
                       decoration: const InputDecoration(
                         isDense: true,
@@ -452,11 +460,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
         if (!isEditing)
-          IconButton(
-            onPressed: onEdit,
-            icon: const Icon(Icons.edit_rounded, size: 18, color: Colors.grey),
-            constraints: const BoxConstraints(),
-            padding: const EdgeInsets.all(4),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: IconButton(
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_rounded, size: 18, color: Colors.grey),
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(4),
+            ),
           ),
       ],
     );
